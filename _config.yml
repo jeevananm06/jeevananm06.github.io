@@ -68,10 +68,10 @@ disqus-shortname: "Jeevanantham"
 ###############
 
 events:
-  - image: "/img/career/lowes.jpg"
+  - image: "/img/career/lowes-logos.jpg"
     date: "June 2016 - today"
     description: "After 5 year of working with Cognizant moved in to lowe's, exploring lowe's with an wide angle."
-  - image: "/img/career/cognizant.jpg"
+  - image: "/img/career/cognizant_new.jpg"
     date: "January 2011 - today"
     description: "Started learning from the basic of programming(c/c++ unix) to an expert developer."
   - image: "/img/career/KCT Logo.jpg"
