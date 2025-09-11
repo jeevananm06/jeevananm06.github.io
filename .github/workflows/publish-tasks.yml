@@ -1,0 +1,28 @@
+name: Publish active tasks JSON
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # every 30 minutes (GitHub allows 5+ minutes)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch active tasks from Vercel
+        run: |
+          curl -fsSL "https://to-do-tracker-nine.vercel.app/api/tasks/active" > active.json
+      - name: Commit if changed
+        run: |
+          if ! git diff --quiet -- active.json; then
+            git config user.email "actions@github.com"
+            git config user.name "GitHub Actions"
+            git add active.json
+            git commit -m "Update active.json"
+            git push
+          else
+            echo "No changes"
+          fi

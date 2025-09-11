@@ -5,3 +5,307 @@ section-type: index
 <!--
 If you want to have a static message in your intro layout, disable the dynamic-typing in the _config.yml and write here your text
 -->
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>My To-Do Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; color: #111; }
+    .row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+    .stack { display: grid; gap: 10px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+    th, td { border: 1px solid #ddd; padding: 8px; vertical-align: top; }
+    th { background: #f7f7f7; text-align: left; }
+    .pill { padding: 2px 8px; border-radius: 999px; background:#eee; display:inline-block; font-size: 12px; }
+    .overdue { background: #fff8f8; }
+    .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    input, select, textarea { padding: 8px; border: 1px solid #ccc; border-radius: 6px; font: inherit; }
+    button { padding: 8px 12px; border: 1px solid #333; background: #111; color: #fff; border-radius: 8px; cursor: pointer; }
+    button.secondary { background: #f5f5f5; color: #111; border-color: #ddd; }
+    small.muted { color: #666; }
+    .grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .field { display: grid; gap: 4px; }
+    .right { text-align: right; }
+  </style>
+</head>
+<body>
+  <h1>My To-Do Tracker</h1>
+
+  <div class="controls">
+    <button id="refresh">Refresh</button>
+    <span id="status"></span>
+    <label>API Base:
+      <input id="apiBase" value="https://to-do-tracker-nine.vercel.app" size="48" />
+    </label>
+    <button id="setKey" class="secondary">Set API Key</button>
+    <small class="muted">Writes require x-api-key (PUBLIC_WRITE_KEY set on Vercel).</small>
+  </div>
+
+  <table id="tbl">
+    <thead>
+      <tr>
+        <th>ID</th><th>Name</th><th>Status</th><th>Assignee</th><th>Due</th><th>Priority</th><th>Effort</th><th>Type</th><th></th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Create Task</h2>
+  <form id="createForm" class="stack">
+    <div class="grid">
+      <div class="field">
+        <label>Task name *</label>
+        <input name="task_name" placeholder="Task name" required />
+      </div>
+      <div class="field">
+        <label>Status *</label>
+        <select name="status" id="statusSelect" required></select>
+        <small class="muted">Must match Notion status options.</small>
+      </div>
+      <div class="field">
+        <label>Assignee</label>
+        <input name="assignee" placeholder="Assignee" />
+      </div>
+      <div class="field">
+        <label>Due date (ISO) *</label>
+        <input type="date" name="due_date" required />
+        <small class="muted">Sends YYYY-MM-DD (ISO) to Notion.</small>
+      </div>
+      <div class="field">
+        <label>Priority</label>
+        <select name="priority" id="prioritySelect"></select>
+      </div>
+      <div class="field">
+        <label>Effort level</label>
+        <select name="effort_level" id="effortSelect"></select>
+      </div>
+      <div class="field">
+        <label>Task type</label>
+        <select name="task_type" id="typeSelect"></select>
+      </div>
+      <div class="field">
+        <label>Attach file (URL)</label>
+        <input name="attach_file" type="url" placeholder="https://..." />
+      </div>
+      <div class="field">
+        <label>Summary</label>
+        <input name="summary" placeholder="Short summary" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <textarea name="description" rows="3" placeholder="Details..."></textarea>
+    </div>
+    <div class="controls">
+      <label><input type="checkbox" id="overridePastDue" /> Set past_due manually</label>
+      <select id="manualPastDue" disabled>
+        <option value="false" selected>No</option>
+        <option value="true">Yes</option>
+      </select>
+      <small class="muted">If unchecked, past_due will be computed from due_date vs today.</small>
+    </div>
+    <div class="right">
+      <button type="submit">Create</button>
+    </div>
+  </form>
+
+  <script>
+    // ---------- Configurable controlled vocabularies (adjust to your Notion DB) ----------
+    const ALLOWED_STATUS = ["Not started", "In progress", "Blocked", "Done"]; // <-- edit if your Notion uses different names
+    const PRIORITIES = ["Low", "Medium", "High"];                          // <-- edit if needed
+    const EFFORT = ["Small", "Medium", "Large"];                               // <-- edit if needed
+    const TYPES = ["Task", "Bug", "Feature"];                               // <-- edit if needed
+
+    // ---------- Elements ----------
+    const tblBody = document.querySelector("#tbl tbody");
+    const statusEl = document.querySelector("#status");
+    const apiBaseEl = document.querySelector("#apiBase");
+    const setKeyBtn = document.getElementById("setKey");
+    const statusSelect = document.getElementById("statusSelect");
+    const prioritySelect = document.getElementById("prioritySelect");
+    const effortSelect = document.getElementById("effortSelect");
+    const typeSelect = document.getElementById("typeSelect");
+    const overridePastDue = document.getElementById("overridePastDue");
+    const manualPastDue = document.getElementById("manualPastDue");
+
+    // ---------- Initialize selects ----------
+    function fillOptions(sel, values, selectedIdx = 0) {
+      sel.innerHTML = values.map((v, i) => `<option ${i===selectedIdx?"selected":""}>${v}</option>`).join("");
+    }
+    fillOptions(statusSelect, ALLOWED_STATUS, 1);     // default "In progress"
+    fillOptions(prioritySelect, PRIORITIES, 0);       // default "Low"
+    fillOptions(effortSelect, EFFORT, 1);             // default "Medium"
+    fillOptions(typeSelect, TYPES, 0);                // default "Task"
+
+    overridePastDue.onchange = () => {
+      manualPastDue.disabled = !overridePastDue.checked; 
+    };
+
+    // ---------- API key handling ----------
+    function getApiKey() { return localStorage.getItem("todo_api_key") || ""; }
+    function setApiKey(k) { localStorage.setItem("todo_api_key", k || ""); }
+    setKeyBtn.onclick = () => {
+      const k = prompt("Enter write API key (PUBLIC_WRITE_KEY on Vercel):", getApiKey());
+      if (k !== null) setApiKey(k);
+    };
+
+    // ---------- Helpers ----------
+    function todayISO() {
+      const d = new Date();
+      // to YYYY-MM-DD in local time (Notion accepts date-only ISO)
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function isPastDue(dueStr) {
+      if (!dueStr) return false;
+      // Compare as dates (local); both are YYYY-MM-DD
+      const due = new Date(dueStr + 'T00:00:00');
+      const now = new Date(todayISO() + 'T00:00:00');
+      return due < now;
+    }
+
+    function assertStatusValid(value) {
+      if (!ALLOWED_STATUS.includes(value)) {
+        throw new Error(`Status must be one of: ${ALLOWED_STATUS.join(', ')}`);
+      }
+    }
+
+    function apiBase() { return apiBaseEl.value.replace(/\/$/, ""); }
+
+    async function fetchJSON(url, init) {
+      const r = await fetch(url, init);
+      if (!r.ok) throw new Error(`${r.status} ${r.statusText}: ${await r.text()}`);
+      const ct = r.headers.get('content-type') || '';
+      if (ct.includes('application/json')) return r.json();
+      return r.text();
+    }
+
+    // ---------- Load Active ----------
+    async function fetchActive() {
+      const api = apiBase();
+      statusEl.textContent = " Loading…";
+      try {
+        const data = await fetchJSON(`${api}/tasks/active`, { cache: 'no-store' });
+        renderRows(data);
+        statusEl.textContent = ` Loaded ${data.length} tasks`;
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = " Error loading tasks.";
+      }
+    }
+
+    function renderRows(rows) {
+      tblBody.innerHTML = "";
+      rows.forEach(t => {
+        const overdue = isPastDue(t.due_date);
+        const tr = document.createElement("tr");
+        if (overdue && (t.status !== 'Done')) tr.classList.add('overdue');
+        tr.innerHTML = `
+          <td>${t.task_id ?? ''}</td>
+          <td>${t.task_name ?? ''}</td>
+          <td><span class="pill">${t.status ?? ''}</span></td>
+          <td>${t.assignee ?? ''}</td>
+          <td>${t.due_date ?? ''}</td>
+          <td>${t.priority ?? ''}</td>
+          <td>${t.effort_level ?? ''}</td>
+          <td>${t.task_type ?? ''}</td>
+          <td>
+            <button data-id="${t.task_id}" class="markDone">Mark Done</button>
+          </td>
+        `;
+        tblBody.appendChild(tr);
+      });
+      tblBody.querySelectorAll(".markDone").forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.getAttribute("data-id");
+          await updateTask(id, { status: "Done", updated_at: new Date().toISOString() });
+          fetchActive();
+        };
+      });
+    }
+
+    // ---------- Create ----------
+    document.getElementById("createForm").onsubmit = async (e) => {
+      e.preventDefault();
+      try {
+        const fd = new FormData(e.currentTarget);
+        const body = Object.fromEntries(fd.entries());
+
+        // Enforce status vocab
+        assertStatusValid(body.status);
+
+        // Ensure ISO date string (input type=date already provides YYYY-MM-DD)
+        if (!/\d{4}-\d{2}-\d{2}/.test(body.due_date)) {
+          throw new Error("Due date must be YYYY-MM-DD");
+        }
+
+        // Compute past_due unless manually overridden
+        let past_due = isPastDue(body.due_date);
+        if (overridePastDue.checked) past_due = (manualPastDue.value === 'true');
+
+        const payload = {
+          task_id: 0, // server/Notion can assign real ID
+          task_name: body.task_name,
+          status: body.status,
+          assignee: body.assignee || "",
+          due_date: body.due_date,              // ISO (YYYY-MM-DD)
+          priority: body.priority || "",
+          task_type: body.task_type || "Task",
+          description: body.description || "",
+          attach_file: body.attach_file || "",
+          past_due,
+          updated_at: new Date().toISOString(), // ISO timestamp
+          effort_level: body.effort_level || "",
+          summary: body.summary || body.task_name
+        };
+
+        const api = apiBase();
+        const r = await fetch(`${api}/tasks`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-api-key": getApiKey(),
+          },
+          body: JSON.stringify(payload),
+        });
+        if (!r.ok) throw new Error(await r.json());
+        e.currentTarget.reset();
+        fetchActive();
+      } catch (err) {
+        alert("Create failed: " + err.message);
+      }
+    };
+
+    // ---------- Update (partial) ----------
+    async function updateTask(id, patch) {
+      if (!id) return alert("Missing task_id");
+      // Enforce status vocab if present
+      if (patch.status) assertStatusValid(patch.status);
+      const api = apiBase();
+      const r = await fetch(`${api}/tasks/${id}` , {
+        method: "PUT",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": getApiKey(),
+        },
+        body: JSON.stringify(patch),
+      });
+      if (!r.ok) throw new Error(await r.json());
+    }
+
+    // ---------- Boot ----------
+    document.getElementById("refresh").onclick = fetchActive;
+    // Ensure we have an API key once for the session (only needed for writes)
+    if (!getApiKey()) {
+      const k = prompt("Enter write API key (PUBLIC_WRITE_KEY on Vercel). You can leave blank for read-only mode:");
+      if (k) setApiKey(k);
+    }
+    fetchActive();
+  </script>
+</body>
+</html>
