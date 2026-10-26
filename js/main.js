@@ -9,7 +9,7 @@
   // 1. Theme Toggle Logic
   const themeToggleBtn = document.getElementById('theme-toggle');
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-  const savedTheme = localStorage.getItem('theme');
+  const savedTheme = localStorage.getItem('themePreference');
 
   function setTheme(theme) {
     if (theme === 'light') {
@@ -17,7 +17,7 @@
     } else {
       document.documentElement.removeAttribute('data-theme');
     }
-    localStorage.setItem('theme', theme);
+    localStorage.setItem('themePreference', theme);
     updateThemeIcon(theme);
   }
 
@@ -30,14 +30,12 @@
     themeToggleBtn.setAttribute('aria-label', isLight ? 'Switch to Dark Mode' : 'Switch to Light Mode');
   }
 
-  // Initialize theme: saved preference -> system -> default dark
-  if (savedTheme) {
+  // Initialize theme: user's explicit choice -> light by default.
+  // Use a new preference key so any previously stored dark default does not override this change.
+  if (savedTheme === 'dark' || savedTheme === 'light') {
     setTheme(savedTheme);
-  } else if (prefersDark.matches) {
-    setTheme('dark');
   } else {
-    // Default to modern dark mode as requested
-    setTheme('dark');
+    setTheme('light');
   }
 
   if (themeToggleBtn) {
