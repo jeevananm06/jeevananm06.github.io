@@ -1,6 +1,6 @@
 # Jeevanantham Govindaraju | Portfolio
 
-Personal portfolio website for **Jeevanantham Govindaraju** — Lead Software Engineer specializing in retail tech, high-concurrency systems, Point of Sale (POS) architecture, and cloud-native backend services.
+Personal portfolio website for **Jeevanantham Govindaraju** — Senior Data Engineer & POS Systems Specialist with 14+ years of experience across Big Data pipelines (Apache Spark, Hive, Hadoop, Kafka, Airflow), enterprise POS systems, and retail technology at Lowe's and Cognizant.
 
 🔗 **Live Website**: [https://jeevananm06.github.io/](https://jeevananm06.github.io/)
 
@@ -9,17 +9,17 @@ Personal portfolio website for **Jeevanantham Govindaraju** — Lead Software En
 ## ⚡ Highlights
 
 - **Design**: Modern minimalist aesthetic with Obsidian/Slate dark mode (default) and crisp editorial light mode toggle.
+- **Identity**: Clean data & systems SVG emblem in navbar.
 - **Performance**: Zero-dependency static architecture. Instant load time (< 200ms) and 100/100 Lighthouse performance.
-- **Accessibility & SEO**: Semantic HTML5, responsive layout, OpenGraph social card metadata.
-- **Hosting**: Served directly via GitHub Pages with `.nojekyll` for immediate static publishing.
+- **Deployment**: Served directly via GitHub Pages with `.nojekyll` for immediate static publishing.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Core Competencies
 
-- **Frontend**: HTML5, Modern CSS3 (CSS Custom Properties, Grid/Flexbox), Vanilla JavaScript (ES6+).
-- **Typography**: [Plus Jakarta Sans](https://fonts.google.com/specimen/Plus+Jakarta+Sans) & [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono).
-- **Deployment**: GitHub Pages.
+- **Big Data & Pipelines**: Apache Spark, PySpark, Apache Hive, Hadoop Clusters, Apache Kafka, Apache Airflow, Data Modeling (SCD Type 1 & 2), Python, SQL.
+- **POS & Retail Systems**: Point of Sale (POS), Sales & Returns Engines, Order Management, Store Receiving, C / C++, Linux/Unix, Splunk Dashboards, Power BI.
+- **Delivery & Leadership**: Root Cause Analysis (RCA), Major Incident Management (MIM), SOP Documentation, Agile/Scrum.
 
 ---
 
@@ -43,3 +43,4 @@ Personal portfolio website for **Jeevanantham Govindaraju** — Lead Software En
 - **LinkedIn**: [jeevanantham-govindaraju](https://www.linkedin.com/in/jeevanantham-govindaraju-4072b721/)
 - **GitHub**: [@jeevananm06](https://github.com/jeevananm06)
 - **Email**: [jeevananm06@gmail.com](mailto:jeevananm06@gmail.com)
+- **Phone**: +91 99944 63249

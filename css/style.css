@@ -128,18 +128,27 @@ img {
   letter-spacing: -0.02em;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
 }
 
-.nav-logo-badge {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
-  padding: 0.2rem 0.5rem;
+.nav-logo-icon {
+  width: 2.35rem;
+  height: 2.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--accent-subtle);
   color: var(--accent-text);
   border: 1px solid var(--badge-border);
-  border-radius: 6px;
-  font-weight: 600;
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.nav-logo:hover .nav-logo-icon {
+  border-color: var(--border-hover);
+  background: var(--bg-surface);
+  transform: translateY(-1px);
 }
 
 .nav-links {
